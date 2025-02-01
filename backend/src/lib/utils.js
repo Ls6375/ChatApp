@@ -16,14 +16,3 @@ export const generateToken = (userId, res) =>{
 	return token;
 };
 
-export const verifyToken = (req, res, next) => {
-	const token = req.cookies.jwt;
-
-	if(!token) return res.status(401).send('Access denied. No token provided.');
-
-	if (jwt.verify(token, process.env.JWT_SECRET)) {
-		next();
-	}else{
-		return res.status(403).send('Access denied. Token invalid or expired.');
-	}
-}
