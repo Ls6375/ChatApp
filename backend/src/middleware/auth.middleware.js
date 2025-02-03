@@ -12,7 +12,6 @@ export const protectRoute = async(req, res, next) => {
 		if (!decoded) {
 			return res.status(403).send('Access denied. Token invalid or expired.');
 		}
-		console.log(decoded);
 		
 		const user = await User.findById(decoded.userId).select('-password');
 
