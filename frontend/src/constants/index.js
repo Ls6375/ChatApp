@@ -1,4 +1,4 @@
-export default constant =  [
+export const THEMES =  [
 	"light",
 	"dark",
 	"cupcake",
