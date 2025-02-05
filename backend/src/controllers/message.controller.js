@@ -1,11 +1,12 @@
 import User from "../models/user.models.js";
 import Message from "../models/message.models.js";
 import cloudinary from "../lib/cloudinary.js";
+import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsers = async (req, res) => {
 	try {
-		const loggedInUserId = req.user._id;
-		const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select('-password');
+		const senderId = req.user._id;
+		const filteredUsers = await User.find({ _id: { $ne: senderId } }).select('-password');
 
 		res.status(200).json(filteredUsers);
 
@@ -18,13 +19,13 @@ export const getUsers = async (req, res) => {
 export const getMessages = async (req, res) => {
 
 	try {
-		const { id: userToChatId } = req.params;
-		const loggedInUserId = req.user._id;
+		const { id: receiverId } = req.params;
+		const senderId = req.user._id;
 
 		const messages = await Message.find({
 			$or: [
-				{ senderId: loggedInUserId, receiverId: userToChatId },
-				{ senderId: userToChatId, receiverId: loggedInUserId },
+				{ senderId: senderId, receiverId: receiverId },
+				{ senderId: receiverId, receiverId: senderId },
 			],
 		});
 		// .sort({ createdAt: 1 });
@@ -39,10 +40,10 @@ export const getMessages = async (req, res) => {
 
 export const sendMessages = async (req, res) => {
 	try {
-		const { id: userToChatId } = req.params;
+		const { id: receiverId } = req.params;
 
 		const { text, image } = req.body;
-		const loggedInUserId = req.user._id;
+		const senderId = req.user._id;
 
 		let imageUrl;
 		if (image) {
@@ -51,18 +52,24 @@ export const sendMessages = async (req, res) => {
 		}
 
 		const messages = new Message({
-			senderId: loggedInUserId,
-			receiverId: userToChatId,
+			senderId: senderId,
+			receiverId: receiverId,
 			text,
 			image: imageUrl
 		});
 
 		await messages.save();
+		
+		const receiverSocketId = getReceiverSocketId(receiverId);
+		if (receiverSocketId) {
+			console.log('Broadcasting to ' , receiverId);
+			
+			io.to(receiverSocketId).emit("newMessage", messages);
+		}else{
+			console.log('No receiver socket found for ', receiverId);
+		}
+		
 		res.status(201).json(messages);
-
-		// todo: socket.io 
-
-
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ message: "Server error: " + error.message });

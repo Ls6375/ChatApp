@@ -5,6 +5,7 @@ import { LogOut, MessageSquare, Settings, User } from "lucide-react";
 
 const Navbar = () => {
   const { logout, authUser } = useAuthStore();
+  console.log(authUser);
 
   return (
     <header className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 backdrop-blur-lg bg-base-100/80">
@@ -28,14 +29,24 @@ const Navbar = () => {
             </Link>
             {authUser && (
               <>
-								<Link to={'/profile'} className="btn btn-sm gap-2">
-									<User className="size-5" />
-									<span className="hidden sm:inline">Profile</span>
-								</Link>
-							  <button className="flex gap-2 items-center" onClick={logout}>
-									<LogOut className="size-5" />
-									<span className="hidden sm:inline">Logout</span>
-								</button>
+                <Link to={"/profile"} className="btn btn-sm gap-2">
+                  {authUser.profilePic ? (
+                    <div className="size-5 relative mx-auto lg:mx-0">
+                      <img
+                        src={authUser.profilePic}
+                        className="size-5 object-cover rounded-full"
+                      />
+                    </div>
+                  ) : (
+                    <User className="size-5" />
+                  )}
+                  <span className="hidden sm:inline">{authUser.fullName}{"'s"} Profile</span>
+                  <img src="" alt="" />
+                </Link>
+                <button className="flex gap-2 items-center" onClick={logout}>
+                  <LogOut className="size-5" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
               </>
             )}
           </div>
